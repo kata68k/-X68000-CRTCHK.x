@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <doslib.h>
 #include <iocslib.h>
+#include <conio.h>
 
 #define FALSE	0
 #define TRUE	!(FALSE)
@@ -85,9 +86,9 @@ char sCRT_MODE_Mess[CRT_MODE_MAX][64] = {
 //	"31kHz 384x256  Col/Page:65536/1 VRAM:1024",/*29*/	/* 使わない */
 };
 
-char	tCRT_15kHz[ 8] = {  1,  3,  5,  7,  9, 11, 13, 15 };
-char	tCRT_24kHz[10] = { 17, 18, 19, 21, 22, 23, 25, 26, 27, 28};
-char	tCRT_31kHz[11] = {  0,  2,  4,  8, 10, 12, 14, 16, 20, 24, 29};
+char	tCRT_15kHz[ 8] = { CRT_MODE_1,  CRT_MODE_3,  CRT_MODE_5,  CRT_MODE_7,  CRT_MODE_9, CRT_MODE_11, CRT_MODE_13, CRT_MODE_15 };
+char	tCRT_24kHz[10] = { CRT_MODE_17, CRT_MODE_18, CRT_MODE_19, CRT_MODE_21, CRT_MODE_22, CRT_MODE_23, CRT_MODE_25, CRT_MODE_26, CRT_MODE_27/*, CRT_MODE_28_Ex*/};
+char	tCRT_31kHz[11] = { CRT_MODE_0,  CRT_MODE_2,  CRT_MODE_4,  CRT_MODE_8, CRT_MODE_10, CRT_MODE_12, CRT_MODE_14, CRT_MODE_16, CRT_MODE_20, CRT_MODE_24/*, CRT_MODE_29_Ex*/};
 
 unsigned short tPallet[16] = {
 	SetRGB( 0,  0,  0),	/* Black */
@@ -122,7 +123,7 @@ void T_PALET(void);
 int Disp_Mode(int crtmod)
 {
 	_iocs_b_locate(0, 0);
-	puts("CRTCHK.x Ver0.93a");
+	puts("CRTCHK.x Ver0.94");
 	printf("Mode[%2d] %s\n", crtmod, sCRT_MODE_Mess[crtmod]);
 	puts("SPACE = next");
 	puts("BS    = back");
@@ -761,6 +762,8 @@ void View_Line(unsigned short mode, unsigned short color)
 			txtFlag = 1;
 		}
 		break;
+#endif
+#if 0
 	case CRT_MODE_29_Ex:
 		{
 			w = 384;
@@ -920,6 +923,18 @@ int main(int argc, char *argv[])
 	}
 	g_ROMVer = Get_ROM_Ver();
 	
+	if((_iocs_b_bpeek ((void *) 0xed0095) & 1) != 0)
+	{
+		printf("\n");
+		printf("※※※注意事項※※※\n");
+		printf("\n");
+		printf("液晶ディスプレイ(LCD)をお使いでしょうか？\n");
+		printf("LCD設定の場合、画面に表示されている周波数とは異なりますのでご注意ください。\n");
+
+		printf("何かキーを押してください。次に進みます\n");
+		do{}while(kbhit()==0);
+	}
+	
 	/*画面の初期設定*/
 	crtmod_old = Set_CRT_Mode(-1, FALSE);
 	Set_CRT_Mode(crtmod, FALSE);
@@ -933,7 +948,7 @@ int main(int argc, char *argv[])
 			Clip15	= 8;
 			Clip24	= 2;
 			Clip31	= 8;
-			Clip 	= 19;
+			Clip 	= CRT_MODE_18+1;
 		}
 		break;
 	case 0x12:
@@ -941,7 +956,7 @@ int main(int argc, char *argv[])
 			Clip15	= 8;
 			Clip24	= 3;
 			Clip31	= 8;
-			Clip 	= 20;
+			Clip 	= CRT_MODE_19+1;
 		}
 		break;
 	case 0x13:
@@ -1030,11 +1045,11 @@ int main(int argc, char *argv[])
 		}
 		
 		Disp_Mode(crtmod);
-		if(crtmod == 16)
+		if(crtmod == CRT_MODE_16)
 		{
 			Disp_Counter(counter++, 16);
 		}
-		else if(crtmod < 16)
+		else if(crtmod < CRT_MODE_16)
 		{
 			Disp_Counter(counter++, 8);
 		}
